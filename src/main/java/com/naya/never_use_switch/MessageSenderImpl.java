@@ -18,6 +18,7 @@ public class MessageSenderImpl implements MessageSender {
 
     @SneakyThrows
     public MessageSenderImpl() {
+
         Reflections scanner = new Reflections("com.naya.never_use_switch");
         Set<Class<? extends Distributor>> classes = scanner.getSubTypesOf(Distributor.class);
 

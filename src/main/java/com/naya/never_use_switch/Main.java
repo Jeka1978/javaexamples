@@ -3,6 +3,7 @@ package com.naya.never_use_switch;
 import lombok.SneakyThrows;
 import org.fluttercode.datafactory.impl.DataFactory;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.Executors;
 
@@ -12,6 +13,9 @@ import java.util.concurrent.Executors;
 public class Main {
     @SneakyThrows
     public static void main(String[] args) {
+
+        Integer integer = new Integer(12);
+
         MessageSenderImpl sender = new MessageSenderImpl();
         DataFactory dataFactory = new DataFactory();
         Random random = new Random();

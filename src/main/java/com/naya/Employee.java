@@ -23,4 +23,17 @@ public class Employee {
     @Singular
     private Map<String,Integer> beers;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
