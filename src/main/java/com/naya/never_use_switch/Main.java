@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import org.fluttercode.datafactory.impl.DataFactory;
 
 import java.util.Random;
+import java.util.concurrent.Executors;
 
 /**
  * @author Evgeny Borisov
@@ -16,8 +17,12 @@ public class Main {
         Random random = new Random();
 
         while (true) {
-            Message message = Message.builder().distributionType(random.nextInt(2) + 1).build();
-            sender.send(message);
+            Message message = Message.builder().distributionType(random.nextInt(3) + 1).build();
+            try {
+                sender.send(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             Thread.sleep(500);
         }
     }
