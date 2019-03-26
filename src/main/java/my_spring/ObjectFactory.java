@@ -2,12 +2,10 @@ package my_spring;
 
 import lombok.SneakyThrows;
 import org.reflections.Reflections;
+import org.springframework.cglib.proxy.Enhancer;
 
 import java.lang.invoke.SerializedLambda;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -41,14 +39,43 @@ public class ObjectFactory {
     @SneakyThrows
     public <T> T createObject(Class<T> type) {
         type = resolveImpl(type);
+
         T t = create(type);
 
         configure(t);
 
         handleInitMethods(type, t);
 
+        if (type.isAnnotationPresent(Benchmark.class)) {
+
+            if (type.getInterfaces().length == 0) {
+                return (T) Enhancer.create(type, new org.springframework.cglib.proxy.InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        return invokationHandlerMethod(method, args, (T) t);
+                    }
+                });
+            }
+
+            return (T) Proxy.newProxyInstance(type.getClassLoader(), type.getInterfaces(), new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    return invokationHandlerMethod(method, args, t);
+                }
+            });
+        }
 
         return t;
+    }
+
+    private <T> Object invokationHandlerMethod(Method method, Object[] args, T t) throws IllegalAccessException, InvocationTargetException {
+        System.out.println("******** BENCHMARK started for method " + method.getName() + " ********");
+        long start = System.nanoTime();
+        Object retVal = method.invoke(t, args);
+        long end = System.nanoTime();
+        System.out.println(end - start);
+        System.out.println("******** BENCHMARK ended for method " + method.getName() + " ********");
+        return retVal;
     }
 
     private <T> void handleInitMethods(Class<T> type, T t) throws IllegalAccessException, InvocationTargetException {

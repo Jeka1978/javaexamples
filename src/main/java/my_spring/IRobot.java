@@ -3,6 +3,7 @@ package my_spring;
 /**
  * @author Evgeny Borisov
  */
+@Benchmark
 public class IRobot {
     @InjectByType
     private Speaker speaker;

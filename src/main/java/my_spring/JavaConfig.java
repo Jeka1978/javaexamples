@@ -13,6 +13,7 @@ public class JavaConfig implements Config {
     public JavaConfig() {
         interface2ImplClass.put(Speaker.class, ConsoleSpeaker.class);
         interface2ImplClass.put(Cleaner.class, CleanerImpl.class);
+        interface2ImplClass.put(SafeChargeService.class, SafeChargeServiceImpl.class);
     }
 
     @Override
