@@ -18,6 +18,7 @@ public class ObjectFactory {
     private static ObjectFactory ourInstance = new ObjectFactory();
     private Config config = new JavaConfig();
     private List<ObjectConfigurator> configurators = new ArrayList<>();
+    private List<ProxyConfigurator> proxyConfigurators = new ArrayList<>();
     private Reflections scanner = new Reflections("my_spring");
 
     public static ObjectFactory getInstance() {
@@ -30,6 +31,12 @@ public class ObjectFactory {
         for (Class<? extends ObjectConfigurator> aClass : classes) {
             if (!Modifier.isAbstract(aClass.getModifiers())) {
                 configurators.add(aClass.getDeclaredConstructor().newInstance());
+            }
+        }
+        Set<Class<? extends ProxyConfigurator>> types = scanner.getSubTypesOf(ProxyConfigurator.class);
+        for (Class<? extends ProxyConfigurator> type : types) {
+            if (!Modifier.isAbstract(type.getModifiers())) {
+                proxyConfigurators.add(type.getDeclaredConstructor().newInstance());
             }
         }
 
@@ -46,37 +53,18 @@ public class ObjectFactory {
 
         handleInitMethods(type, t);
 
-        if (type.isAnnotationPresent(Benchmark.class)) {
-
-            if (type.getInterfaces().length == 0) {
-                return (T) Enhancer.create(type, new org.springframework.cglib.proxy.InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        return invokationHandlerMethod(method, args, (T) t);
-                    }
-                });
-            }
-
-            return (T) Proxy.newProxyInstance(type.getClassLoader(), type.getInterfaces(), new InvocationHandler() {
-                @Override
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    return invokationHandlerMethod(method, args, t);
-                }
-            });
-        }
+        t = wrapWithProxyIfNeed(type, t);
 
         return t;
     }
 
-    private <T> Object invokationHandlerMethod(Method method, Object[] args, T t) throws IllegalAccessException, InvocationTargetException {
-        System.out.println("******** BENCHMARK started for method " + method.getName() + " ********");
-        long start = System.nanoTime();
-        Object retVal = method.invoke(t, args);
-        long end = System.nanoTime();
-        System.out.println(end - start);
-        System.out.println("******** BENCHMARK ended for method " + method.getName() + " ********");
-        return retVal;
+    private <T> T wrapWithProxyIfNeed(Class<T> type, T t) {
+        for (ProxyConfigurator proxyConfigurator : proxyConfigurators) {
+            t = (T) proxyConfigurator.wrapWithProxy(t, type);
+        }
+        return t;
     }
+
 
     private <T> void handleInitMethods(Class<T> type, T t) throws IllegalAccessException, InvocationTargetException {
         Method[] methods = type.getMethods();

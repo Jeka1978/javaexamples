@@ -1,5 +1,7 @@
 package my_spring;
 
+import jdk.jfr.TransitionTo;
+
 /**
  * @author Evgeny Borisov
  */
